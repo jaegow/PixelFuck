@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": ";AAAA,WAAY;EAEX,QAAQ,EAAC,MAAM;;;AAEf,eAAM;EACL,QAAQ,EAAC,QAAQ",
+"sources": ["../sass/partials/_pixelFuck.scss"],
+"names": [],
+"file": "main.css"
+}

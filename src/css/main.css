@@ -1,0 +1,10 @@
+/* line 1, ../sass/partials/_pixelFuck.scss */
+.pixel_fuck {
+  overflow: hidden;
+}
+/* line 5, ../sass/partials/_pixelFuck.scss */
+.pixel_fuck > * {
+  position: absolute;
+}
+
+/*# sourceMappingURL=main.css.map */

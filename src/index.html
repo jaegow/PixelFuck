@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Pixel Fucker</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <!-- scripts at bottom of page -->
+</head>
+
+<body>
+    <div class="pixel_fuck" data-image="media/test.jpg"></div>
+    <script src="js/libs/jquery/jquery-1.11.2.min.js" type="text/javascript"></script>
+    <script src="js/libs/greensock/TweenMax.min.js" type="text/javascript"></script>
+    <script src="js/Util.js" type="text/javascript"></script>
+    <script src="js/Control.js" type="text/javascript"></script>
+    <script src="js/PixelFuck.js" type="text/javascript"></script>
+    <script type="text/javascript">
+	    $(document).ready(function() {
+	        Control.init();
+	    });
+    </script>
+    
+    <!-- only here for live reload -->
+    <script src="http://localhost:35729/livereload.js"></script>
+</body>
+
+</html>
