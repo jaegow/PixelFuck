@@ -24,7 +24,7 @@ var Control = function($) { // ----- static module
 
     var _pixelManipulation = function() {
         //
-        PixelFuck.fuckit(_body.find('.pixel_fuck'));
+        PixelFuck.fuckit(_body.find('.pixel_fuck'), PixelFuck.TYPE.PIXELIZED);
     };
 
     // output/public     

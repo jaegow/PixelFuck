@@ -10,11 +10,18 @@
 //
 var PixelFuck = function($) { // ----- static module
     // private var(s)
+    var _renderType = {
+        PIXELIZED: 'pixelized',
+        INVERSE: 'inverse',
+        GREYSCALE: 'greyscale'
+    };
+    // todo: incorporate a animation duration
+    // var _animation_duration = 1;
 
     // private method(s)
-    var _fuckit = function($container) {
-
-        var pixelation_steps = [5, 10, 20, 30, 40, 50];
+    var _fuckit = function($container, type) {
+        // type is not defined and is defaulted
+        if (arguments.length == 1) type = _renderType.PIXELIZED;
 
         $container.each(function(i, iteredElement) {
             var $iteredElement = $(iteredElement);
@@ -31,75 +38,64 @@ var PixelFuck = function($) { // ----- static module
                     Util.log(message);
                 } else {
                     var loaded_image_element = this;
-                    var canvases = _collectPixelatedCanvases(loaded_image_element, pixelation_steps);
+                    var animationElements = _getAnimationElements(loaded_image_element, type);
                     var childElements = [loaded_image_element];
-                    childElements = childElements.concat(canvases);
+                    childElements = childElements.concat(animationElements);
                     $iteredElement.append(childElements);
-                    _defineAnimation($iteredElement);
+                    _animateChildElements($iteredElement);
                 }
             }).attr('src', image_src);
         });
     };
 
-    var _defineAnimation = function($container) {
+    var _getAnimationElements = function(orgin_image_element, render_type) {
 
-        var children = $container.children();
-        var animationIncrement = 0.2;
-        var delay = 1;
-        var delayIncrement = 0.15;
+        var elements = [];
 
-        for (var i = children.length - 1; i >= 1; i--) {
-            var iteredChild = children[i];
-            Util.log('iteredChild', iteredChild);
-            TweenMax.to(iteredChild, animationIncrement, {
-                autoAlpha: 0,
-                delay: delay,
-                onComplete: function() {
-                    $(this.target).remove();
-                }
-            });
-            delay += delayIncrement;
+        switch (render_type) {
+            case _renderType.PIXELIZED:
+                elements = _getPixelizedImages(orgin_image_element);
+                break;
+            case _renderType.INVERSE:
+                elements = _getInverseImages(orgin_image_element);
+                break;
+            case _renderType.GREYSCALE:
+                elements = _getGreyScaleImages(orgin_image_element);
+                break;    
         }
+        return elements;
     };
 
-    var _collectPixelatedCanvases = function(image_element, pixelation_steps) {
+    var _getPixelizedImages = function(image_element) {
         //
-        var canvases = [];
+        var images = [];
+        // use larger numbers for easier rendering
+        var pixelation_steps = [5, 10, 20, 30, 40, 50];
         //
-        for (var i = 0; i < pixelation_steps.length; i++) {
-            var iteredStep = pixelation_steps[i];
-            var iteredCanvas = _getPixelizedCanvas(image_element, iteredStep);
-            canvases.push(iteredCanvas);
-        }
-        return canvases;
-    };
-
-    // use larger numbers for easier rendering
-    var _getPixelizedCanvas = function(image_element, pixelized_amount) {
         var canvas = document.createElement('canvas');
         var image_width = canvas.width = image_element.width;
         var image_height = canvas.height = image_element.height;
-        // canvas.className = 'canvas_' + pixelized_amount;
-
         var canvas_context = canvas.getContext("2d");
-        canvas_context.drawImage(image_element, 0, 0);
 
-        var image_data = canvas_context.getImageData(0, 0, canvas.width, canvas.height);
-        var image_pixel_data = image_data.data;
+        for (var i = 0; i < pixelation_steps.length; i++) {
+            var iteredStep = pixelation_steps[i];
 
-        _renderPixelCollection(image_pixel_data, canvas, 0, 0, pixelized_amount);
-        //
-        canvas_context.putImageData(image_data, 0, 0);
+            canvas_context.drawImage(image_element, 0, 0);
 
-        var image = new Image();
-        image.src = canvas.toDataURL();
+            var image_data = canvas_context.getImageData(0, 0, canvas.width, canvas.height);
+            var image_pixel_data = image_data.data;
 
-        canvas = null;
+            _pixelate(image_pixel_data, canvas, 0, 0, iteredStep);
+            canvas_context.putImageData(image_data, 0, 0);
+            var image = new Image();
+            image.src = canvas.toDataURL();
 
-        return image;
+            images.push(image);
+        }
+        return images;
     };
 
-    var _renderPixelCollection = function(pixel_data, canvas_element, start_x, start_y, pixels_from_center) {
+    var _pixelate = function(pixel_data, canvas_element, start_x, start_y, pixels_from_center) {
 
         var bounds_horizontal = canvas_element.width;
         var bounds_vertical = canvas_element.height;
@@ -147,13 +143,94 @@ var PixelFuck = function($) { // ----- static module
         if (next_y > bounds_vertical) {
             // Util.log('*** render complete ***');
         } else {
-            _renderPixelCollection(pixel_data, canvas_element, next_x, next_y, pixels_from_center);
+            _pixelate(pixel_data, canvas_element, next_x, next_y, pixels_from_center);
+        }
+    };
+
+    var _getInverseImages = function(image_element) {
+        Util.log('PixelFuck._getInverseImages()');
+        //
+        var images = [];
+        //
+        var canvas = document.createElement('canvas');
+        var image_width = canvas.width = image_element.width;
+        var image_height = canvas.height = image_element.height;
+        var canvas_context = canvas.getContext("2d");
+        canvas_context.drawImage(image_element, 0, 0);
+        var image_data = canvas_context.getImageData(0, 0, canvas.width, canvas.height);
+        var image_pixel_data = image_data.data;
+
+        for (var i = 0; i < image_pixel_data.length; i += 4) {
+            var index_red = i;
+            var index_green = i + 1;
+            var index_blue = i + 2;
+
+            image_pixel_data[index_red] = 255 - image_pixel_data[index_red];
+            image_pixel_data[index_green] = 255 - image_pixel_data[index_green];
+            image_pixel_data[index_blue] = 255 - image_pixel_data[index_blue];
+        }
+        canvas_context.putImageData(image_data, 0, 0);
+        var image = new Image();
+        image.src = canvas.toDataURL();
+
+        images.push(image);
+
+        return images;
+    };
+
+    var _getGreyScaleImages = function(image_element) {
+        Util.log('PixelFuck._getGreyScaleImages()');
+        //
+        var images = [];
+        //
+        var canvas = document.createElement('canvas');
+        var image_width = canvas.width = image_element.width;
+        var image_height = canvas.height = image_element.height;
+        var canvas_context = canvas.getContext("2d");
+        canvas_context.drawImage(image_element, 0, 0);
+        var image_data = canvas_context.getImageData(0, 0, canvas.width, canvas.height);
+        var image_pixel_data = image_data.data;
+
+        for (var i = 0; i < image_pixel_data.length; i += 4) {
+            var index_red = i;
+            var index_green = i + 1;
+            var index_blue = i + 2;
+            var average = (image_pixel_data[index_red] + image_pixel_data[index_green] + image_pixel_data[index_blue]) / 3;
+            image_pixel_data[index_red] = image_pixel_data[index_green] = image_pixel_data[index_blue] = average;
+        }
+        canvas_context.putImageData(image_data, 0, 0);
+        var image = new Image();
+        image.src = canvas.toDataURL();
+
+        images.push(image);
+
+        return images;
+    };   
+
+    var _animateChildElements = function($container) {
+
+        var children = $container.children();
+        var animationIncrement = 0.2;
+        var delay = 1;
+        var delayIncrement = 0.15;
+
+        for (var i = children.length - 1; i >= 1; i--) {
+            var iteredChild = children[i];
+            Util.log('iteredChild', iteredChild);
+            TweenMax.to(iteredChild, animationIncrement, {
+                autoAlpha: 0,
+                delay: delay,
+                onComplete: function() {
+                    $(this.target).remove();
+                }
+            });
+            delay += delayIncrement;
         }
     };
 
     // output/public     
     return {
         fuckit: _fuckit,
-        getPixelizedCanvas: _getPixelizedCanvas
+        TYPE: _renderType
     };
 }(jQuery);
